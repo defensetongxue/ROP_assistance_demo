@@ -6,7 +6,7 @@ data_path= '../autodl-tmp/dataset_ROP/'
 tar_path="../autodl-tmp/guoPan/AssitDemo/"
 os.makedirs(tar_path,exist_ok=True)
 os.system(f"rm -rf {tar_path}/*")
-with open('../StageROP/new.json','r') as f:
+with open(data_path+'/annotations.json','r') as f:
     data_dict=json.load(f)
     
 #
@@ -14,7 +14,7 @@ image_name_list=[]
 cnt=0
 for image_name in data_dict:
     data= data_dict[image_name]
-    if "stage_result" in data and len(data["stage_result"]['points'])>0:
+    if "stage_result" in data and len(data["stage_result"]['points'])>0 and 'ridge' in data:
         image_name_list.append(image_name)
         cnt+=1
         if cnt>4:
@@ -22,7 +22,7 @@ for image_name in data_dict:
 ## begin
 total_cnt=len(image_name_list)
 print(total_cnt)
-idx_shuffle_list=[i for i in range(total_cnt)]
+idx_shuffle_list=[i for i in range(cnt)]
 random.shuffle(idx_shuffle_list)
 cnt=0
 for i in range(total_cnt):
