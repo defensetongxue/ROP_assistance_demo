@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Arial, sans-serif';
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .image-container {
+      flex: 1;
+      border: 1px solid #ddd;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      /* Adjusted to show images one above the other */
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+      flex-wrap: wrap;
+      /* Allow multiple rows */
+      justify-content: space-around;
+      /* Distribute space around items */
+    }
+
+    .image-container img {
+      width: 48%;
+      /* Adjust width for 2 images per row */
+      height: auto;
+      margin: 1%;
+      /* Small margin around images */
+      box-sizing: border-box;
+    }
+
+    .image-name {
+      width: 48%;
+      text-align: center;
+      font-weight: bold;
+      margin: 1%;
+    }
+
+    #timer {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .controls {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .controls button {
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .controls label {
+      font-weight: bold;
+    }
+
+    .label {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="image-container">
+      <div id="imageName" class="image-name"></div>
+      <img id="image" src="" alt="Loaded image" />
+
+      <div id="imageName2" class="image-name"></div>
+      <img id="image2" src="" alt="Loaded image" />
+
+      <!-- Placeholders for the third and fourth images -->
+      <div id="imageName3" class="image-name"></div>
+      <img id="image3" src="" alt="Loaded image" />
+
+      <div id="imageName4" class="image-name"></div>
+      <img id="image4" src="" alt="Loaded image" />
+    </div>
+    <div class="controls">
+      <label>
+        <button id="loadDataBtn" onclick="document.getElementById('file-input').click()">Load Data</button>
+        <input type="file" id="file-input" accept="image/*" multiple onchange="loadData(event)" style="display: none;">
+      </label>
+
+      <button id="beginBtn" onclick="beginAnnotation()">Begin</button>
+      <div id="timer">00:00:00</div>
+      <button onclick="annotate('norm')">Norm</button>
+      <button onclick="annotate('stage 1')">Stage 1</button>
+      <button onclick="annotate('stage 2')">Stage 2</button>
+      <button onclick="annotate('stage 3')">Stage 3</button>
+      <button onclick="nextImage()">Next</button>
+      <button onclick="previousImage()">Back</button>
+      <button onclick="downloadAnnotations()">Download</button>
+      <div class="label" id="label">No label</div>
+    </div>
+  </div>
+
+  <script>
+    let images = [];
+    let annotations = {};
+    let index = 0;
+    let startTime;
+    let timerInterval;
+    let isAnnotationStarted = false;
+    let canOperate = false;
+    const toltal_number = 100
+    function beginAnnotation() {
+      if (!isAnnotationStarted && images.length > 0) {
+        canOperate = true
+        document.getElementById('image').src = images[index].src;
+        document.getElementById('imageName').textContent = images[index].name;
+        updateSecondImage();
+
+        // Enable buttons
+        const buttons = document.querySelectorAll('.controls button');
+        buttons.forEach(btn => btn.disabled = false);
+
+        // Start timer
+        startTime = new Date();
+        timerInterval = setInterval(updateTimer, 1000);
+
+        isAnnotationStarted = true;
+      }
+    }
+
+    function updateTimer() {
+      const now = new Date();
+      const diff = new Date(now - startTime);
+      const hours = diff.getUTCHours().toString().padStart(2, '0');
+      const minutes = diff.getUTCMinutes().toString().padStart(2, '0');
+      const seconds = diff.getUTCSeconds().toString().padStart(2, '0');
+      document.getElementById('timer').textContent = `${hours}:${minutes}:${seconds}`;
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+    }
+
+    function loadData(event) {
+      images = [];
+      annotations = {};
+      index = 0;
+
+      const files = event.target.files;
+      if (files.length === 0) return;
+      if (files.length < toltal_number * 5) console.log("do not loaded enough data")
+      let loadedCount = 0; // Keep track of how many images have been loaded
+
+      for (let i = 0; i < files.length; i++) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          images.push({ src: e.target.result, name: files[i].name });
+          loadedCount++; // Increment the loadedCount every time an image is loaded
+
+          // Check if all images are loaded
+          if (loadedCount === files.length) {
+
+            // Sort images array by name to ensure correct sequence
+            images.sort((a, b) => parseInt(a.name) - parseInt(b.name));
+
+            // After sorting set the source for the first image and update the corresponding image name
+            document.getElementById('image').src = images[index].src;
+            document.getElementById('imageName').textContent = images[index].name;
+            updateSecondImage();
+          }
+        }
+        reader.readAsDataURL(files[i]);
+      }
+    }
+
+
+    function annotate(label) {
+      if (index < toltal_number * 2 && index >= 0) {
+        if (!canOperate) return;
+        annotations[images[index].name] = label;
+        document.getElementById('label').textContent = label;
+      }
+    }
+
+    function nextImage() {
+      if (index < toltal_number * 2) {
+        if (!canOperate) return;
+        index += 1;
+        document.getElementById('image').src = images[index].src;
+        document.getElementById('imageName').textContent = images[index].name;
+        updateLabel();
+        updateSecondImage();
+      }
+    }
+
+    function previousImage() {
+      if (index > 0) {
+        if (!canOperate) return;
+        index -= 1;
+        document.getElementById('image').src = images[index].src;
+        document.getElementById('imageName').textContent = images[index].name;
+        updateLabel();
+        updateSecondImage();
+      }
+    }
+    function updateSecondImage() {
+      // Define image elements and their corresponding name elements
+      const imageElements = [
+        document.getElementById('image'),
+        document.getElementById('image2'),
+        document.getElementById('image3'),
+        document.getElementById('image4')
+      ];
+      const imageNameElements = [
+        document.getElementById('imageName'),
+        document.getElementById('imageName2'),
+        document.getElementById('imageName3'),
+        document.getElementById('imageName4')
+      ];
+
+      // Update images and names based on the index
+      imageElements.forEach((imgElem, i) => {
+        const imageIndex = index + i * total_cnt; // Calculate the index for each image
+        if (imageIndex < images.length) {
+          imgElem.src = images[imageIndex].src;
+          imgElem.alt = images[imageIndex].name;
+          imgElem.style.display = 'block';
+          imageNameElements[i].textContent = images[imageIndex].name;
+          imageNameElements[i].style.display = 'block';
+        } else {
+          imgElem.style.display = 'none';
+          imageNameElements[i].style.display = 'none';
+        }
+      });
+    }
+    function updateLabel() {
+      const label = annotations[images[index].name] || 'No label';
+      document.getElementById('label').textContent = label;
+    }
+
+    function downloadAnnotations() {
+      const endTime = new Date();
+      const totalTime = (endTime - startTime) / 1000; // in seconds
+      const annotationsWithTime = { ...annotations, totalTime };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(annotationsWithTime, null, 2));
+      const dlAnchorElem = document.createElement('a');
+      dlAnchorElem.setAttribute("href", dataStr);
+      dlAnchorElem.setAttribute("download", "annotations.json");
+      dlAnchorElem.click();
+    }
+    // Call this function when the annotation for the last image (200.jpg) is done
+    function onLastImageAnnotated() {
+      stopTimer();
+    }
+
+    // Initially, disable all buttons except the 'Choose Images' and 'Begin' buttons
+    window.onload = function () {
+      const buttons = document.querySelectorAll('.controls button:not(:first-child):not(#beginBtn)');
+      buttons.forEach(btn => btn.disabled = true);
+    }
+  </script>
+</body>
+
+</html>
