@@ -48,18 +48,22 @@ def sample_and_save_images(zones_map, sample_for_zone, data_dict, num_seeds=5):
         seed_dir = os.path.join(base_dir, f"random_seed_{seed}")
         os.makedirs(seed_dir, exist_ok=True)
 
-        # Directories for visual and image data
-        visual_dir = os.path.join(seed_dir, "visual")
+        # Directories for stage, image, and ridge data
+        visual_dir = os.path.join(seed_dir, "stage")
         image_dir = os.path.join(seed_dir, "image")
+        ridge_dir = os.path.join(seed_dir, "ridge")
         os.makedirs(visual_dir, exist_ok=True)
         os.makedirs(image_dir, exist_ok=True)
+        os.makedirs(ridge_dir, exist_ok=True)
 
         for zone, num_samples in sample_for_zone.items():
-            # Create zone directories in both visual and image folders
+            # Create zone directories in visual, image, and ridge folders
             zone_visual_dir = os.path.join(visual_dir, str(zone))
             zone_image_dir = os.path.join(image_dir, str(zone))
+            zone_ridge_dir = os.path.join(ridge_dir, str(zone))
             os.makedirs(zone_visual_dir, exist_ok=True)
             os.makedirs(zone_image_dir, exist_ok=True)
+            os.makedirs(zone_ridge_dir, exist_ok=True)
 
             images_in_zone = [img for img, z in zones_map.items() if z == zone]
             sampled_images = random.sample(images_in_zone, min(num_samples, len(images_in_zone)))
@@ -68,12 +72,16 @@ def sample_and_save_images(zones_map, sample_for_zone, data_dict, num_seeds=5):
                 # Determine source paths
                 src_path_visual = data_dict[image_name].get('visual_stage_path', data_dict[image_name]['image_path'])
                 src_path_image = data_dict[image_name]['image_path']
+                src_path_ridge = data_dict[image_name].get('ridge_visual_path', data_dict[image_name]['image_path'])
 
                 # Copy files to respective directories
                 dest_path_visual = os.path.join(zone_visual_dir, os.path.basename(image_name))
                 dest_path_image = os.path.join(zone_image_dir, os.path.basename(image_name))
+                dest_path_ridge = os.path.join(zone_ridge_dir, os.path.basename(image_name))
                 shutil.copy(src_path_visual, dest_path_visual)
                 shutil.copy(src_path_image, dest_path_image)
+                shutil.copy(src_path_ridge, dest_path_ridge)
+
 
 # Call the function with the required parameters
 sample_and_save_images(zones_map, sample_for_zone, data_dict)
