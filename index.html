@@ -7,95 +7,96 @@
     <style>
         body {
             font-family: 'Arial, sans-serif';
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .container {
             display: flex;
-            height: 100vh;
-            padding: 20px;
-            box-sizing: border-box;
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .image-container {
-            flex: 1;
-            border: 1px solid #ddd;
-            padding: 20px;
             display: flex;
-            flex-direction: column;
-            /* Adjusted to show images one above the other */
-            justify-content: center;
-            align-items: center;
-            box-sizing: border-box;
             flex-wrap: wrap;
-            /* Allow multiple rows */
-            justify-content: space-around;
-            /* Distribute space around items */
         }
 
         .image-container img {
-            width: 48%;
-            /* Adjust width for 2 images per row */
+            width: calc(50% - 10px);
             height: auto;
-            margin: 1%;
-            /* Small margin around images */
-            box-sizing: border-box;
         }
+
 
         .image-name {
-            width: 48%;
+            width: 100%;
             text-align: center;
             font-weight: bold;
-            margin: 1%;
-        }
-
-        #timer {
-            margin-top: 20px;
-            font-size: 18px;
-            font-weight: bold;
+            margin-bottom: 5px;
         }
 
         .controls {
             flex: 1;
+            padding: 20px;
             display: flex;
             flex-direction: column;
+            align-items: center;
             gap: 10px;
         }
 
         .controls button {
-            padding: 10px;
+            width: 100%;
+            padding: 10px 0;
             font-size: 16px;
+            border: none;
+            background-color: #007bff;
+            color: white;
             cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
         }
 
-        .controls label {
-            font-weight: bold;
+        .controls button:hover {
+            background-color: #0056b3;
         }
 
+        .controls button:disabled {
+            background-color: #ccc;
+            cursor: default;
+        }
+
+        #timer,
         .label {
-            margin-top: 20px;
             font-size: 18px;
             font-weight: bold;
+            color: #333;
         }
     </style>
+
 </head>
 
 <body>
-
     <div class="container">
         <div class="image-container">
             <!-- Image placeholders -->
             <div id="imageName" class="image-name"></div>
-            <img id="image" src="" alt="Loaded image" />
+            <img id="image" src=""  />
 
             <!-- Additional image placeholders for folder_2 -->
-            <div id="imageName2" class="image-name"></div>
-            <img id="image2" src="" alt="Loaded image" />
+            <!-- <div id="imageName2" class="image-name"></div> -->
+            <img id="image2" src="" />
 
-            <div id="imageName3" class="image-name"></div>
-            <img id="image3" src="" alt="Loaded image" />
+            <!-- <div id="imageName3" class="image-name"></div> -->
+            <img id="image3" src=""  />
 
-            <div id="imageName4" class="image-name"></div>
-            <img id="image4" src="" alt="Loaded image" />
+            <!-- <div id="imageName4" class="image-name"></div> -->
+            <img id="image4" src="" />
         </div>
 
         <div class="controls">
@@ -105,7 +106,7 @@
             <button onclick="annotate('stage 1')">Stage 1</button>
             <button onclick="annotate('stage 2')">Stage 2</button>
             <button onclick="annotate('stage 3')">Stage 3</button>
-            <button onclick="nextImage()">Next</button>
+            <button id="next" onclick="nextImage()">Next</button>
             <button onclick="previousImage()">Back</button>
             <button id="downloadBtn" onclick="downloadAnnotations()">Download</button>
             <div class="label" id="label">No label</div>
@@ -115,7 +116,7 @@
     <script>
         let imagesFolder1 = [];
         let imagesFolder2 = [];
-        let imagesZone = [];
+        let imagesEnhance = [];
         let imagesRidge = [];
         let imagesStage = [];
         let annotations = {};
@@ -132,10 +133,10 @@
         function loadImages() {
             for (let i = 1; i <= totalNumber; i++) {
                 imagesFolder1.push(`./data/folder_1/${i}.jpg`);
-                imagesFolder2.push(`./data/folder_2/${i + totalNumber}.jpg`);
-                imagesZone.push(`./data/zone/${i + totalNumber}.jpg`);
-                imagesRidge.push(`./data/ridge/${i + totalNumber}.jpg`);
-                imagesStage.push(`./data/visual/${i + totalNumber}.jpg`);
+                imagesFolder2.push(`./data/folder_2/${i}.jpg`);
+                imagesEnhance.push(`./data/enhance/${i}.jpg`);
+                imagesRidge.push(`./data/ridge/${i}.jpg`);
+                imagesStage.push(`./data/visual/${i}.jpg`);
             }
         }
 
@@ -157,6 +158,7 @@
 
                 // Keep 'Download' button disabled
                 document.getElementById('downloadBtn').disabled = true;
+                document.getElementById('next').disabled = true;
             }
         }
 
@@ -167,14 +169,15 @@
                 document.getElementById('imageName').textContent = `Folder 1 Image: ${index + 1}`;
             } else {
                 document.getElementById('image').src = imagesFolder2[index];
-                document.getElementById('image2').src = imagesZone[index];
+                document.getElementById('image2').src = imagesEnhance[index];
                 document.getElementById('image3').src = imagesRidge[index];
                 document.getElementById('image4').src = imagesStage[index];
                 console.log(imagesFolder2[index])
-                console.log(imagesZone[index])
+                console.log(imagesEnhance[index])
                 console.log(imagesRidge[index])
                 console.log(imagesStage[index])
                 document.getElementById('imageName').textContent = `Folder 2 Image: ${index + 1}`;
+                
                 // Update other image names as well...
             }
         }
@@ -193,6 +196,7 @@
                 // Enable the 'Download' button after finishing annotations in both folders
                 document.getElementById('downloadBtn').disabled = false;
             }
+            document.getElementById('next').disabled = true;
         }
 
 
@@ -208,6 +212,8 @@
             let imageName = isFolder1 ? imagesFolder1[index] : imagesFolder2[index];
             annotations[imageName] = label;
             document.getElementById('label').textContent = label;
+            document.getElementById('next').disabled = false;
+
         }
 
         function updateLabel() {
